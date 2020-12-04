@@ -6,8 +6,8 @@ import {StackNavigationProp} from '@react-navigation/stack';
 
 import {UserContext} from '~/Context/User';
 
-import Input from '~/Screen/Input';
-import Button from '~/Screen/Button';
+import Input from '~/Components/Input';
+import Button from '~/Components/Button';
 
 const Container = Styled.SafeAreaView`
     flex: 1;

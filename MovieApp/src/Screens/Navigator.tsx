@@ -73,11 +73,11 @@ export default () => {
     const { isLoading, userInfo } = useContext<IUserContext>(UserContext);
 
     if(isLoading === false) {
-        return <Loading/>
+        return <Loading/>;
     }
-    return {
+    return (
         <NavigationContainer>
-            {userInfo? <MovieNavigator/> : <LoginNavigator/> }
+            {userInfo ? <MovieNavigator/> : <LoginNavigator/> }
         </NavigationContainer>
-    };
+    );
 }
