@@ -12,3 +12,5 @@ const App = () => {
     </UserContextProvider>
   );
 }
+
+export default App;

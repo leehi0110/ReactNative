@@ -27,7 +27,7 @@ const UserContextProvider = ({children}: Props) => {
             });
             setIsLoading(true);
         });
-    }
+    };
 
     const getUserInfo = (): void => {
         AsyncStorage.getItem('token').then(value => {
