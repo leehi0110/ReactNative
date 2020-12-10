@@ -6,111 +6,180 @@ interface Props {
 
 const CalContext = createContext<ICalContext>({
   form: [],
-  number: 0,
+  calNumber: '',
+  pair: 0,
   result: undefined,
   padInput: (input: string) => {},
   calculate: (): void => {},
 });
 
-const CalContextProvider = ({children}: Props) => {
-  const [form, setForm] = useState<Array<string>>([]);
-  const [number, setNumber] = useState<number | 0>(0);
-  const [result, setResult] = useState<number | undefined>(undefined);
+const changePostfix = (infix:Array<string>): Array<string> => {
 
-  const padInput = (input: string): void => {
-    if(input === '=') {
+  let postfix: Array<string> = [];
 
-      const lastItem = form[form.length-1];
-      if (
-          lastItem !== '(' &&
-          lastItem !== ')' &&
-          lastItem !== '+' &&
-          lastItem !== '-' &&
-          lastItem !== '*' &&
-          lastItem !== '/'
-          ) {
-            calculate();
-          }
-    } // 연산자가 = 일 경우 계산
-    else if(input === 'C') {
-      setForm([]);
-      setNumber(0);
-      setResult(undefined);
-    } // 계산기 초기화
-    else if(input === '+' || input === 'x' || input === '/' || input ==='-') {
-      if(number !== 0) {
-        const newForm = [...form,(number+''),input];
-        setNumber(0);
-        setForm(newForm); 
+  let stack: Array<string> = [];
+  let topIndex: number = -1;
+
+  for(let item of infix) {
+
+    if(item === '(') {
+      stack.push(item);
+      topIndex++;
+    }
+    else if(item === ')') {
+      while(1) {
+        if(stack[topIndex] === '(') {
+          stack.splice(topIndex,1);
+          topIndex--;
+          break;
+        }
+        else {
+          postfix.push(stack[topIndex]);
+          stack.splice(topIndex,1);
+          topIndex--;
+        }
       }
-    } // 연산자 입력
-    else if(input === '(' || input === ')') {
-
-      if(input === ')') {
-        const newForm = [...form,(number+''),input]
-        setNumber(0);
-        setForm(newForm);
+    }
+    else if(isPriority(item) === 0 || isPriority(item) === 1) {
+      if(topIndex === -1) {
+        stack.push(item);
+        topIndex++;
       }
       else {
-        const newForm = [...form, input];
-        setForm(newForm);
+        while(1) {
+          if(isPriority(stack[topIndex]) < isPriority(item)){
+            stack.push(item);
+            topIndex++;
+            break;
+          }
+          else {
+            postfix.push(stack[topIndex]);
+            stack.splice(topIndex,1);
+            topIndex--;
+          }
+        }
       }
-
-    } // 괄호 입력
+    }
     else {
-      setNumber(number*10 + Number(input));
-    } // 번호 입력
+      postfix.push(item);
+    }
 
-    console.log(form);
+  }
+  for(let i = topIndex;i>-1;i--) {
+    postfix.push(stack[i]);
+  }
+
+  return postfix;
+} // 후위수식으로 바꾸기 위한 함수
+
+const calPostfix = (postfix:Array<string>): number => {
+
+  let calResult: number = 0;
+
+  return calResult;
+}
+
+const isPriority = (input: string): number => {
+  if(input === '(' || input === ')') return -1;
+  else if(input === '+' || input === '-') return 0;
+  else if(input === '/' || input === 'x') return 1;
+  else if(input === '=') return 2;
+  else if(input === 'C') return 3;
+  else return 4; // 숫자
+}
+
+const CalContextProvider = ({children}: Props) => {
+  const [form, setForm] = useState<Array<string>>([]);
+  const [calNumber, setCalNumber] = useState<string>('');
+  const [result, setResult] = useState<number | undefined>(undefined);
+  const [pair, setPair] = useState<number>(0);
+
+  const padInput = (input: string) => {
+
+    const topIndex: number = form.length -1; // 식의 마지막 인덱스
+
+    if(input === '(' || input === ')') {
+      if(input === '('){
+        if(calNumber === '') {
+          setForm([...form,input]);
+          setPair(pair+1);
+        }
+        else console.log('( input invaild');
+      }
+      else { // input === ')'
+        if(form.length === 0) console.log(') input invaild');
+        else if(isPriority(form[topIndex]) === 0 || isPriority(form[topIndex]) === 1) {
+          console.log(') input invaild');
+        }
+        else if(pair === 0) console.log(') input invaild');
+        else {
+          setForm([...form,input]);
+          setPair(pair-1);
+        }
+      }
+    }
+    else if(input === '+' || input === '-' || input === 'x' || input === '/') {
+      if(form.length === 0) console.log('+ - x / input invaild');
+      else if(form[topIndex] === ')' || isPriority(form[topIndex]) === 4) {
+        setForm([...form,input]);
+      }
+      else {
+        console.log('+ - / x input invaild');
+      }
+    }
+    else if(input === '=') {
+      setResult(0);
+    }
+    else if(input === 'C') {
+      setForm([]);
+      setCalNumber('');
+      setResult(undefined);
+    }
+    else { // input === 'number'
+      if (form.length === 0) setForm([input]); // 아무것도 없을때
+      else if (form[topIndex] === '(') {
+        setForm([...form,input]);
+      } // 앞이 열린 괄호
+      else if(form[topIndex] === ')') {
+      } // 앞이 닫힌 괄호
+      else if(isPriority(form[topIndex]) === 0 || isPriority(form[topIndex]) === 1) {
+        setForm([...form,input]);
+      } // 앞이 연산자
+      else if(isPriority(form[topIndex]) === 4) {
+        
+        var lastNumber: string = form[topIndex];
+        let newForm: Array<string> = form;
+        newForm.splice(topIndex,1);
+
+        setForm([...newForm,(lastNumber+input)]);
+
+      }
+    }
   };
 
   const calculate = (): void => {
-    // 입력된 값들을 가져와 계산하는 함수
-    let postStack: Array<String> = []; // postfix로 만들기 위한 스택
-    let postResult: Array<String> = []; // postfix로 만든 결과
 
-    for(let i=0;i<form.length;i++) {
-      if(form[i] === '(') {
-      }
-      else if(form[i] === ')') {
-        postResult.push(postStack[postStack.length-1]);
+    console.log(form);
+    const postfix = changePostfix(form);
 
-        postStack.splice(postStack.length-1,1);
-      }
-      else if(form[i] === '+' || form[i] === '-') {
-        if(postStack[postStack.length-1] === '*' || postStack[postStack.length-1] === '/'){
-          postResult.push(postStack[postStack.length-1]);
-          postStack.splice(postStack.length-1,1);
-        }
-        else {
-          postStack.push(form[i]);
-        }
-      }
-      else {
-        if(postStack[postStack.length-1] === '+' || postStack[postStack.length-1] === '-'){
-          postStack.push(form[i]);
-        }
-        else {
-          postResult.push(postStack[postStack.length-1]);
-          postStack.splice(postStack.length-1,1);
-        }
-      }
+    console.log(postfix);
+    // const calReult = calPostfix(postfix);
 
-      if(i+1 == form.length) {
-        for(let j=postStack.length-1;j>-1;j--){
-          postResult.push(postStack[j]);
-        }
-      } // postStack 비우는 조건문
-    }
-
-    console.log(postResult.join(''));
+    // setResult(undefined);
+    // setForm([]);
+    // setCalNumber(calReult+"");
   };
+
+  useEffect(() => {
+    if(result === 0) calculate();
+  });
 
   return (
     <CalContext.Provider
       value={{
         form,
-        number,
+        calNumber,
+        pair,
         result,
         padInput,
         calculate,
