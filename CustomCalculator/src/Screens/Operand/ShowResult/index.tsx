@@ -20,14 +20,14 @@ const InputText = Styled.Text`
 `;
 
 const ShowResult = () => {
-  const {calNumber} = useContext<ICalContext>(CalContext);
+  const {nowNumber} = useContext<ICalContext>(CalContext);
 
-  // useEffect(()=> {
-  // }, [calNumber]);
+  useEffect(() => {
+  },[nowNumber]);
 
   return (
     <Container>
-      <InputText>{calNumber === '' ? '' : calNumber}</InputText>
+      <InputText>{nowNumber === '' ? '' : nowNumber}</InputText>
     </Container>
   );
 };
