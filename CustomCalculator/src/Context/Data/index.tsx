@@ -1,3 +1,4 @@
+import { parseSync } from '@babel/core';
 import React, {createContext, useState, useEffect} from 'react';
 
 interface Props {
@@ -21,54 +22,49 @@ const changePostfix = (infix:Array<string>): Array<string> => {
   let topIndex: number = -1;
 
   for(let item of infix) {
-
     if(item === '(') {
-      stack.push(item);
       topIndex++;
+      stack[topIndex] = item;
     }
     else if(item === ')') {
+
       while(1) {
-        if(stack[topIndex] === '(') {
-          stack.splice(topIndex,1);
-          topIndex--;
+
+        var topEle = stack[topIndex];
+        stack.splice(topIndex,1);
+        topIndex--;
+
+        if(topEle === '(') {
           break;
         }
         else {
-          postfix.push(stack[topIndex]);
-          stack.splice(topIndex,1);
-          topIndex--;
+          postfix.push(topEle);
         }
       }
+
     }
     else if(isPriority(item) === 0 || isPriority(item) === 1) {
-      if(topIndex === -1) {
-        stack.push(item);
-        topIndex++;
+
+      while(topIndex !== -1 && isPriority(stack[topIndex]) >= isPriority(item)) {
+        var topEle = stack[topIndex];
+        stack.splice(topIndex,1);
+        topIndex --;
+
+        postfix.push(topEle);
       }
-      else {
-        while(1) {
-          if(isPriority(stack[topIndex]) < isPriority(item)){
-            stack.push(item);
-            topIndex++;
-            break;
-          }
-          else {
-            postfix.push(stack[topIndex]);
-            stack.splice(topIndex,1);
-            topIndex--;
-          }
-        }
-      }
+
+      topIndex++;
+      stack[topIndex] = item;
+
     }
     else {
       postfix.push(item);
     }
-
   }
+
   for(let i = topIndex;i>-1;i--) {
     postfix.push(stack[i]);
   }
-
   return postfix;
 } // 후위수식으로 바꾸기 위한 함수
 
@@ -76,7 +72,37 @@ const calPostfix = (postfix:Array<string>): number => {
 
   let calResult: number = 0;
 
-  return calResult;
+  let stack: Array<string> = [];
+  let topIndex: number = -1;
+
+  for(let i=0;i<postfix.length;i++){
+    if(isPriority(postfix[i]) === 4) {
+      topIndex++;
+      stack[topIndex] = postfix[i];
+    }
+    else {
+      var calVal: number;
+
+      if(postfix[i] === '+') {
+        calVal = Number(stack[topIndex-1]) + Number(stack[topIndex]);
+      }
+      else if(postfix[i] === '-') {
+        calVal = Number(stack[topIndex-1]) - Number(stack[topIndex]);
+      }
+      else if(postfix[i] === 'x') {
+        calVal = Number(stack[topIndex-1]) * Number(stack[topIndex]);
+      }
+      else { // postfix[i] === '/'
+        calVal = Number(stack[topIndex-1]) / Number(stack[topIndex]);
+      }
+
+      stack.splice(topIndex-1,2);
+      topIndex --;
+      stack[topIndex] = calVal +'';
+    }
+  }
+
+  return Number(stack[topIndex]);
 }
 
 const isPriority = (input: string): number => {
@@ -159,20 +185,18 @@ const CalContextProvider = ({children}: Props) => {
 
   const calculate = (): void => {
 
-    console.log(form);
     const postfix = changePostfix(form);
+    const calReult = calPostfix(postfix);
 
-    console.log(postfix);
-    // const calReult = calPostfix(postfix);
-
-    // setResult(undefined);
-    // setForm([]);
-    // setCalNumber(calReult+"");
+    setResult(undefined);
+    setForm([]);
+    setCalNumber(calReult+"");
+    setForm([calReult+'']);
   };
 
   useEffect(() => {
     if(result === 0) calculate();
-  });
+  },[result]);
 
   return (
     <CalContext.Provider
