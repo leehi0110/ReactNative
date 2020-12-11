@@ -1,217 +1,126 @@
-import { parseSync } from '@babel/core';
 import React, {createContext, useState, useEffect} from 'react';
+import * as func from '~/Context/common/common';
+
+const CalContext = createContext<ICalContext>({
+  form: '',
+  pair: 0,
+  nowNumber: '',
+  result: '',
+  padInput: (input: string) => {},
+});
 
 interface Props {
   children: JSX.Element | Array<JSX.Element>;
 }
 
-const CalContext = createContext<ICalContext>({
-  form: [],
-  calNumber: '',
-  pair: 0,
-  result: undefined,
-  padInput: (input: string) => {},
-  calculate: (): void => {},
-});
-
-const changePostfix = (infix:Array<string>): Array<string> => {
-
-  let postfix: Array<string> = [];
-
-  let stack: Array<string> = [];
-  let topIndex: number = -1;
-
-  for(let item of infix) {
-    if(item === '(') {
-      topIndex++;
-      stack[topIndex] = item;
-    }
-    else if(item === ')') {
-
-      while(1) {
-
-        var topEle = stack[topIndex];
-        stack.splice(topIndex,1);
-        topIndex--;
-
-        if(topEle === '(') {
-          break;
-        }
-        else {
-          postfix.push(topEle);
-        }
-      }
-
-    }
-    else if(isPriority(item) === 0 || isPriority(item) === 1) {
-
-      while(topIndex !== -1 && isPriority(stack[topIndex]) >= isPriority(item)) {
-        var topEle = stack[topIndex];
-        stack.splice(topIndex,1);
-        topIndex --;
-
-        postfix.push(topEle);
-      }
-
-      topIndex++;
-      stack[topIndex] = item;
-
-    }
-    else {
-      postfix.push(item);
-    }
-  }
-
-  for(let i = topIndex;i>-1;i--) {
-    postfix.push(stack[i]);
-  }
-  return postfix;
-} // 후위수식으로 바꾸기 위한 함수
-
-const calPostfix = (postfix:Array<string>): number => {
-
-  let calResult: number = 0;
-
-  let stack: Array<string> = [];
-  let topIndex: number = -1;
-
-  for(let i=0;i<postfix.length;i++){
-    if(isPriority(postfix[i]) === 4) {
-      topIndex++;
-      stack[topIndex] = postfix[i];
-    }
-    else {
-      var calVal: number;
-
-      if(postfix[i] === '+') {
-        calVal = Number(stack[topIndex-1]) + Number(stack[topIndex]);
-      }
-      else if(postfix[i] === '-') {
-        calVal = Number(stack[topIndex-1]) - Number(stack[topIndex]);
-      }
-      else if(postfix[i] === 'x') {
-        calVal = Number(stack[topIndex-1]) * Number(stack[topIndex]);
-      }
-      else { // postfix[i] === '/'
-        calVal = Number(stack[topIndex-1]) / Number(stack[topIndex]);
-      }
-
-      stack.splice(topIndex-1,2);
-      topIndex --;
-      stack[topIndex] = calVal +'';
-    }
-  }
-
-  return Number(stack[topIndex]);
-}
-
-const isPriority = (input: string): number => {
-  if(input === '(' || input === ')') return -1;
-  else if(input === '+' || input === '-') return 0;
-  else if(input === '/' || input === 'x') return 1;
-  else if(input === '=') return 2;
-  else if(input === 'C') return 3;
-  else return 4; // 숫자
-}
-
 const CalContextProvider = ({children}: Props) => {
-  const [form, setForm] = useState<Array<string>>([]);
-  const [calNumber, setCalNumber] = useState<string>('');
-  const [result, setResult] = useState<number | undefined>(undefined);
+  const [form, setForm] = useState<string>('');
   const [pair, setPair] = useState<number>(0);
+  const [nowNumber, setNowNumber] = useState<string>('');
+  const [result, setResult] = useState<string>('');
 
-  const padInput = (input: string) => {
+  const padInput = (input: string):void => {
 
-    const topIndex: number = form.length -1; // 식의 마지막 인덱스
+    var lastInput: string;
 
-    if(input === '(' || input === ')') {
-      if(input === '('){
-        if(calNumber === '') {
-          setForm([...form,input]);
+    if(isNaN(Number(input))) {
+
+      if(result !== '') {
+        setResult('');
+      }
+
+      lastInput = form[form.length-1];
+
+      if(input === '(') {
+        if(isNaN(Number(form[form.length-1]))) {
           setPair(pair+1);
-        }
-        else console.log('( input invaild');
-      }
-      else { // input === ')'
-        if(form.length === 0) console.log(') input invaild');
-        else if(isPriority(form[topIndex]) === 0 || isPriority(form[topIndex]) === 1) {
-          console.log(') input invaild');
-        }
-        else if(pair === 0) console.log(') input invaild');
+          setForm(form+input);
+        } // 이전 입력이 연산자일 경우 입력을 받는다.
         else {
-          setForm([...form,input]);
-          setPair(pair-1);
+          console.log('Error: 이전 입력이 피연산자 입니다');
         }
       }
-    }
-    else if(input === '+' || input === '-' || input === 'x' || input === '/') {
-      if(form.length === 0) console.log('+ - x / input invaild');
-      else if(form[topIndex] === ')' || isPriority(form[topIndex]) === 4) {
-        setForm([...form,input]);
+      else if(input === ')') {
+
+        if(pair === 0) {
+          console.log('Error: 식에 여는 괄호가 존재 하지 않습니다');
+        }
+        else if(form.length === 0) {
+          console.log('Error: 첫 입력에 닫는 괄호를 입력할 수 없습니다');
+        }
+        else if(lastInput === '+' || lastInput === '-' || lastInput === 'x' || lastInput === '/') {
+          console.log('Error: 연산자 다음에 닫는 괄호가 올 수 없습니다');
+        }
+        else {
+          setPair(pair-1);
+          setForm(form+input);
+          setNowNumber('');
+        }
+      }
+      else if(input === 'C') {
+        setPair(0);
+        setForm('');
+        setNowNumber('');
+      } // 초기화
+      else if(input === '='){
+
+        if(pair !== 0) {
+          console.log('Error: 괄호의 짝이 맞지 않습니다');
+        }
+        else if(lastInput === '+' || lastInput === '-' || lastInput === 'x' || lastInput === '/' || lastInput === '('){
+          console.log('Error: 이전 입력이 연산자 입니다');
+        }
+        else {
+          var postfix = func.changePostfix(form);
+          var calculateResult = func.calculatePostfix(postfix);
+
+          setResult(calculateResult);
+          setForm(calculateResult);
+          setNowNumber(calculateResult);
+          setPair(0);
+        }
       }
       else {
-        console.log('+ - / x input invaild');
+        if(form.length === 0) {
+          console.log('Error: 식에 처음값은 피연산자여야 합니다');
+        }
+        else if(lastInput === '(' || lastInput === '+' || lastInput === '-' || lastInput === 'x' || lastInput === '/') {
+          console.log('Error: 이전 입력이 "(" 를 포함한 연산자 입니다');
+        }
+        else {
+          setForm(form+input);
+          setNowNumber('');
+        }
       }
-    }
-    else if(input === '=') {
-      setResult(0);
-    }
-    else if(input === 'C') {
-      setForm([]);
-      setCalNumber('');
-      setResult(undefined);
-    }
-    else { // input === 'number'
-      if (form.length === 0) setForm([input]); // 아무것도 없을때
-      else if (form[topIndex] === '(') {
-        setForm([...form,input]);
-      } // 앞이 열린 괄호
-      else if(form[topIndex] === ')') {
-      } // 앞이 닫힌 괄호
-      else if(isPriority(form[topIndex]) === 0 || isPriority(form[topIndex]) === 1) {
-        setForm([...form,input]);
-      } // 앞이 연산자
-      else if(isPriority(form[topIndex]) === 4) {
-        
-        var lastNumber: string = form[topIndex];
-        let newForm: Array<string> = form;
-        newForm.splice(topIndex,1);
+    } // 입력이 연산자
+    else {
 
-        setForm([...newForm,(lastNumber+input)]);
-
+      if(result !== '') {
+        setResult('')
+        setNowNumber('');
       }
-    }
+
+      setNowNumber(nowNumber+input);
+      setForm(form+input);
+    } // 입력이 숫자
+
+    // ts에서는 isNaN()의 파라미터로 Number타입만 받을 수 있다
+    // 따라서, Number()를 이용하여 변환한 뒤 isNan을 사용한다.
+    // 숫자로 변환될수 없는 문자는 NaN이라는 타입으로 리턴된다.
   };
-
-  const calculate = (): void => {
-
-    const postfix = changePostfix(form);
-    const calReult = calPostfix(postfix);
-
-    setResult(undefined);
-    setForm([]);
-    setCalNumber(calReult+"");
-    setForm([calReult+'']);
-  };
-
-  useEffect(() => {
-    if(result === 0) calculate();
-  },[result]);
 
   return (
     <CalContext.Provider
       value={{
         form,
-        calNumber,
         pair,
+        nowNumber,
         result,
         padInput,
-        calculate,
       }}>
       {children}
     </CalContext.Provider>
-  )
-}
+  );
+};
 
-export {CalContext, CalContextProvider};
-
+export {CalContextProvider, CalContext};

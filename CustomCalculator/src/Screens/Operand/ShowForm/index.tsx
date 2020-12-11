@@ -1,6 +1,7 @@
-import React, {useContext} from 'react';
+import React, {useContext, useEffect} from 'react';
 import Styled from 'styled-components/native';
 import { CalContext } from '~/Context/Data';
+
 
 const Container = Styled.View`
   flex: 1;
@@ -19,9 +20,12 @@ const FormText = Styled.Text`
 const ShowForm = () => {
   const {form} = useContext<ICalContext>(CalContext);
 
+  useEffect(() => {
+  },[form])
+
   return (
     <Container>
-      <FormText>{form.join('')}</FormText>
+      <FormText>{form}</FormText>
     </Container>
   );
 };

@@ -1,8 +1,7 @@
 interface ICalContext {
-  form: Array<string>;
-  calNumber: string;
+  form: string;
   pair: number;
-  result: number | undefined;
+  nowNumber: string;
+  result: string;
   padInput: (input: string) => void;
-  calculate: () => void;
 }
