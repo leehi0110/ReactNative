@@ -10,20 +10,25 @@ export function changePostfix(infix: string) {
       nowNumber += item;
     } // 숫자일 경우
     else if(item === '(') {
-      stackPush(stack,item);
+      stack.push(item);
+      // stackPush(stack,item);
     } // 여는 괄호
     else if(item === ')') {
 
-      stackPush(postfix,nowNumber);
+      postfix.push(nowNumber);
+      // stackPush(postfix,nowNumber);
       nowNumber = '';
       
       while(1) {
         if(stackTop(stack) === '(') {
-          var popVal = stackPop(stack);
+          var popVal = stack.pop();
+          // var popVal = stackPop(stack);
           break;
         }
         else {
-          stackPush(postfix,stackPop(stack));
+          postfix.push(stackTop(stack));
+          stack.pop();
+          // stackPush(postfix,stackPop(stack));
         }
       }
 
@@ -31,26 +36,33 @@ export function changePostfix(infix: string) {
     else {
       
       if(nowNumber !== ''){
-        stackPush(postfix,nowNumber);
+        postfix.push(nowNumber);
+        // stackPush(postfix,nowNumber);
         nowNumber = '';
       }
 
       while(!isEmpty(stack) && isPriority(item) <= isPriority(stackTop(stack))) {
-        stackPush(postfix,stackPop(stack));
+        postfix.push(stackTop(stack));
+        stack.pop();
+        // stackPush(postfix,stackPop(stack));
       }
 
-      stackPush(stack, item);
+      stack.push(item);
+      // stackPush(stack, item);
 
     } // 연산자일 경우
   }
 
   if(nowNumber !== ''){
-    stackPush(postfix,nowNumber);
+    postfix.push(nowNumber);
+    // stackPush(postfix,nowNumber);
     nowNumber = '';
   }
 
   while(!isEmpty(stack)) {
-    stackPush(postfix,stackPop(stack));
+    postfix.push(stackTop(stack));
+    stack.pop();
+    // stackPush(postfix,stackPop(stack));
   }
 
   console.log(postfix);
@@ -65,23 +77,28 @@ export function calculatePostfix(postfix: Array<string>) {
   for(var item of postfix) {
 
     if(isPriority(item) === 2) {
-      stackPush(stack,item);
+      stack.push(item);
+      // stackPush(stack,item);
     } // 숫자일 경우 푸쉬
     else {
-      var firstTopVal = Number(stackPop(stack));
-      var secondTopVal = Number(stackPop(stack));
+      var firstTopVal = Number(stack.pop());
+      var secondTopVal = Number(stack.pop());
 
       if(item === '+') {
-        stackPush(stack,(secondTopVal+firstTopVal)+'');
+        stack.push((secondTopVal+firstTopVal)+'');
+        // stackPush(stack,(secondTopVal+firstTopVal)+'');
       }
       else if(item === '-') {
-        stackPush(stack,(secondTopVal-firstTopVal)+'');
+        stack.push((secondTopVal-firstTopVal)+'');
+        // stackPush(stack,(secondTopVal-firstTopVal)+'');
       }
       else if(item === 'x') {
-        stackPush(stack,(secondTopVal*firstTopVal)+'');
+        stack.push((secondTopVal*firstTopVal)+'');
+        // stackPush(stack,(secondTopVal*firstTopVal)+'');
       }
       else {
-        stackPush(stack,(secondTopVal/firstTopVal)+'');
+        stack.push((secondTopVal/firstTopVal)+'');
+        // stackPush(stack,(secondTopVal/firstTopVal)+'');
       }
     }
     
@@ -114,6 +131,6 @@ function stackPop(stack: Array<string>) {
   return returnVal;
 }; // 스택의 Top Element를 Pop하는 함수
 
-function stackPush(stack: Array<string>, element: string) {
-  stack.push(element);
-}; // 스택에 Element를 push 하는 함수
+// function stackPush(stack: Array<string>, element: string) {
+//   stack.push(element);
+// }; // 스택에 Element를 push 하는 함수

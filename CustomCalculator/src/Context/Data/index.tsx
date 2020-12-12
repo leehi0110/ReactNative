@@ -96,12 +96,14 @@ const CalContextProvider = ({children}: Props) => {
     else {
 
       if(result !== '') {
-        setResult('')
-        setNowNumber('');
+        setForm(input);
+        setResult('');
+        setNowNumber(input);
       }
-
-      setNowNumber(nowNumber+input);
-      setForm(form+input);
+      else {
+        setNowNumber(nowNumber+input);
+        setForm(form+input);
+      }
     } // 입력이 숫자
 
     // ts에서는 isNaN()의 파라미터로 Number타입만 받을 수 있다
