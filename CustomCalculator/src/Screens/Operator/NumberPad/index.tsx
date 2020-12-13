@@ -40,7 +40,7 @@ const NumberPad = () => {
       <SubContainer>
         <Button ButtonColor={'#C1D0DA'} title={'00'}/>
         <Button ButtonColor={'#C1D0DA'} title={'0'}/>
-        <Button ButtonColor={'#C1D0DA'} title={'.'}/>
+        <Button ButtonColor={'#C1D0DA'} title={''}/>
       </SubContainer>
     </Container>
   );
